@@ -146,10 +146,6 @@ const REPLACEMENT_NAME_PARTS: Record<string, { prefixes: string[]; suffixes: str
     prefixes: ['Capital', 'Crown', 'Summit', 'Apex', 'Vault', 'Prime', 'Atlas', 'Merit', 'Crest', 'Forge'],
     suffixes: ['Holdings', 'Financial', 'Capital', 'Group', 'Partners', 'Trust', 'Ventures', 'Fund'],
   },
-  Consumer: {
-    prefixes: ['Fresh', 'Swift', 'Snap', 'Quick', 'Dash', 'Bright', 'Peak', 'True', 'Bold', 'Pure'],
-    suffixes: ['Goods', 'Market', 'Direct', 'Express', 'Supply', 'Brands', 'Corp', 'Commerce'],
-  },
 };
 
 const usedReplacementNames = new Set<string>();
