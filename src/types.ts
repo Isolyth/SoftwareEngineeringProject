@@ -17,6 +17,7 @@ export interface StockState {
   openPrice: number;
   dayTrend: number; // % target for the day
   history: PricePoint[];
+  failed?: boolean;
 }
 
 export interface Holdings {
@@ -32,6 +33,19 @@ export interface NewsArticle {
   tags: string[]; // related stock tickers
 }
 
+export type NewsEventType = 'positive' | 'negative' | 'neutral';
+
+export interface LiveNewsEvent {
+  id: number;
+  headline: string;
+  impact: number;
+  volatility: number;
+  duration: number; // remaining ticks of effect
+  type: NewsEventType;
+  targetSector?: string;
+  targetTicker?: string;
+}
+
 export interface GameState {
   day: number;
   maxDays: number;
@@ -41,8 +55,12 @@ export interface GameState {
   cash: number;
   holdings: Holdings;
   stocks: StockState[];
+  stockDefinitions: StockDefinition[];
   selectedTicker: string;
   goal: number;
   dayStartPortfolio: number;
   news: NewsArticle[];
+  liveNews: LiveNewsEvent[];
+  activeEffects: LiveNewsEvent[];
+  bankruptcyAlert: string | null;
 }

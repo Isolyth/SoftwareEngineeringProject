@@ -4,7 +4,8 @@ import { formatGameTime, toAbsoluteTime, MARKET_CLOSE } from '../stockEngine';
 import StockList from './StockList';
 import StockChart from './StockChart';
 import InfoPanel from './InfoPanel';
-import TradeModal from './TradeModal';
+import NewsFeed from './NewsFeed';
+import BankruptcyAlert from './BankruptcyAlert';
 
 interface Props {
   state: GameState;
@@ -25,16 +26,20 @@ export default function DayUI({
   onSell,
   onSearch,
 }: Props) {
-  const [tradeMode, setTradeMode] = useState<'buy' | 'sell' | null>(null);
+  const [tradeQty, setTradeQty] = useState(1);
 
   const selectedStock = state.stocks.find((s) => s.ticker === state.selectedTicker)!;
   const progress = (state.timeMinutes / MARKET_CLOSE) * 100;
 
-  const maxBuy = Math.floor(state.cash / selectedStock.currentPrice);
+  const maxBuy = selectedStock.failed ? 0 : Math.floor(state.cash / selectedStock.currentPrice);
   const maxSell = state.holdings[state.selectedTicker] || 0;
 
   return (
     <div className="day-ui">
+      {state.bankruptcyAlert && (
+        <BankruptcyAlert message={state.bankruptcyAlert} />
+      )}
+
       <div className="top-bar">
         <span className="day-label">DAY {state.day}</span>
         <div className="time-bar">
@@ -61,33 +66,64 @@ export default function DayUI({
           />
           <div className="action-bar">
             <button className="action-btn search-btn" onClick={onSearch}>SEARCH</button>
-            <button className="action-btn buy-btn" onClick={() => setTradeMode('buy')} disabled={maxBuy <= 0}>BUY</button>
-            <button className="action-btn sell-btn" onClick={() => setTradeMode('sell')} disabled={maxSell <= 0}>SELL</button>
+            <button
+              className="action-btn buy-btn"
+              onClick={() => onBuy(state.selectedTicker, tradeQty)}
+              disabled={maxBuy <= 0 || selectedStock.failed || tradeQty > maxBuy}
+            >
+              BUY
+            </button>
+            <button
+              className="action-btn sell-btn"
+              onClick={() => onSell(state.selectedTicker, tradeQty)}
+              disabled={maxSell <= 0 || selectedStock.failed || tradeQty > maxSell}
+            >
+              SELL
+            </button>
+            <div className="qty-control">
+              <button
+                className="qty-btn"
+                onClick={() => setTradeQty((q) => Math.max(1, q - 1))}
+                disabled={tradeQty <= 1}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                className="qty-input"
+                min={1}
+                value={tradeQty}
+                onChange={(e) => setTradeQty(Math.max(1, Number(e.target.value) || 1))}
+              />
+              <button
+                className="qty-btn"
+                onClick={() => setTradeQty((q) => q + 1)}
+              >
+                +
+              </button>
+              <button
+                className="qty-max-btn"
+                onClick={() => setTradeQty(Math.max(maxBuy, maxSell, 1))}
+              >
+                MAX
+              </button>
+            </div>
           </div>
         </div>
 
-        <InfoPanel
-          goal={state.goal}
-          portfolioValue={portfolioValue}
-          todayPL={todayPL}
-          cash={state.cash}
-        />
+        <div className="right-panel">
+          <InfoPanel
+            goal={state.goal}
+            portfolioValue={portfolioValue}
+            todayPL={todayPL}
+            cash={state.cash}
+          />
+          <NewsFeed
+            liveNews={state.liveNews}
+            activeEffects={state.activeEffects}
+          />
+        </div>
       </div>
-
-      {tradeMode && (
-        <TradeModal
-          mode={tradeMode}
-          ticker={state.selectedTicker}
-          currentPrice={selectedStock.currentPrice}
-          maxQty={tradeMode === 'buy' ? maxBuy : maxSell}
-          onConfirm={(qty) => {
-            if (tradeMode === 'buy') onBuy(state.selectedTicker, qty);
-            else onSell(state.selectedTicker, qty);
-            setTradeMode(null);
-          }}
-          onCancel={() => setTradeMode(null)}
-        />
-      )}
     </div>
   );
 }

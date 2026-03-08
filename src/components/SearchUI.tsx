@@ -1,5 +1,5 @@
 import type { GameState } from '../types';
-import { STOCKS } from '../stockData';
+import { BANKRUPTCY_THRESHOLD } from '../stockEngine';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -22,52 +22,62 @@ export default function SearchUI({ state, portfolioValue, todayPL, onBack, onBuy
       <div className="search-content">
         <div className="search-list">
           {state.stocks.map((stock) => {
-            const def = STOCKS.find((d) => d.ticker === stock.ticker)!;
-            const change = ((stock.currentPrice - stock.openPrice) / stock.openPrice) * 100;
+            const def = state.stockDefinitions.find((d) => d.ticker === stock.ticker)!;
+            const change = stock.failed
+              ? 0
+              : ((stock.currentPrice - stock.openPrice) / stock.openPrice) * 100;
             const isUp = change >= 0;
             const held = state.holdings[stock.ticker] || 0;
-            const maxBuy = Math.floor(state.cash / stock.currentPrice);
+            const maxBuy = stock.failed ? 0 : Math.floor(state.cash / stock.currentPrice);
+            const isDanger = !stock.failed && stock.currentPrice < BANKRUPTCY_THRESHOLD;
 
             return (
               <div
                 key={stock.ticker}
-                className={`search-row ${stock.ticker === state.selectedTicker ? 'selected' : ''}`}
-                onClick={() => onSelectStock(stock.ticker)}
+                className={`search-row ${stock.ticker === state.selectedTicker ? 'selected' : ''} ${stock.failed ? 'failed' : ''} ${isDanger ? 'danger' : ''}`}
+                onClick={() => !stock.failed && onSelectStock(stock.ticker)}
               >
                 <div className="search-row-info">
                   <span className="search-ticker">{stock.ticker}</span>
                   <span className="search-name">{def.name}</span>
                   <span className="search-sector">{def.sector}</span>
                 </div>
-                <div className="search-row-chart">
-                  <ResponsiveContainer width={80} height={30}>
-                    <LineChart data={stock.history}>
-                      <Line
-                        type="monotone"
-                        dataKey="price"
-                        stroke={isUp ? '#00e676' : '#ff5252'}
-                        strokeWidth={1.5}
-                        dot={false}
-                        isAnimationActive={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <span className={`search-change ${isUp ? 'up' : 'down'}`}>
-                  {isUp ? '+' : ''}{change.toFixed(1)}%
-                </span>
-                <span className="search-price">${stock.currentPrice.toFixed(2)}</span>
-                {held > 0 && <span className="search-held">Own: {held}</span>}
-                {state.phase === 'day' && maxBuy > 0 && (
-                  <button
-                    className="search-buy-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onBuy(stock.ticker, 1);
-                    }}
-                  >
-                    BUY
-                  </button>
+                {stock.failed ? (
+                  <span className="failed-label">FAILED</span>
+                ) : (
+                  <>
+                    <div className="search-row-chart">
+                      <ResponsiveContainer width={80} height={30}>
+                        <LineChart data={stock.history}>
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke={isUp ? '#00e676' : '#ff5252'}
+                            strokeWidth={1.5}
+                            dot={false}
+                            isAnimationActive={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <span className={`search-change ${isUp ? 'up' : 'down'}`}>
+                      {isUp ? '+' : ''}{change.toFixed(1)}%
+                    </span>
+                    <span className="search-price">${stock.currentPrice.toFixed(2)}</span>
+                    {isDanger && <span className="bankruptcy-badge">RISK</span>}
+                    {held > 0 && <span className="search-held">Own: {held}</span>}
+                    {state.phase === 'day' && maxBuy > 0 && (
+                      <button
+                        className="search-buy-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onBuy(stock.ticker, 1);
+                        }}
+                      >
+                        BUY
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             );

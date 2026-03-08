@@ -78,30 +78,126 @@ export function initStockState(
   };
 }
 
+export const BANKRUPTCY_THRESHOLD = 10;
+const BANKRUPTCY_CHANCE = 0.20;
+
 export function tickStock(
   stock: StockState,
   def: StockDefinition,
   minuteInDay: number,
-  day: number
+  day: number,
+  newsImpact: number = 0,
+  newsVolatility: number = 1,
+  trendShift: number = 0
 ): StockState {
+  if (stock.failed) return stock;
+
   const progress = minuteInDay / MARKET_CLOSE; // 0 to 1
   const price = stock.currentPrice;
 
-  const targetPrice = stock.openPrice * (1 + stock.dayTrend);
+  const adjustedDayTrend = stock.dayTrend + trendShift;
+  const targetPrice = stock.openPrice * (1 + adjustedDayTrend);
   const trendPull = (targetPrice - price) * 0.002 * (0.5 + progress);
 
-  const noise = (Math.random() - 0.5) * price * def.volatility * 0.008;
+  const effectiveVolatility = def.volatility * newsVolatility;
+  const noise = (Math.random() - 0.5) * price * effectiveVolatility * 0.008;
 
   const deviation = (price - stock.openPrice) / stock.openPrice;
   const reversion = -deviation * price * 0.001;
 
-  const newPrice = Math.max(0.5, price + trendPull + noise + reversion);
+  const newsBias = newsImpact * price * 0.003;
+
+  const newPrice = Math.max(0.5, price + trendPull + noise + reversion + newsBias);
   const absTime = toAbsoluteTime(day, minuteInDay);
   const newPoint: PricePoint = { time: absTime, price: newPrice };
 
   return {
     ...stock,
     currentPrice: newPrice,
+    dayTrend: adjustedDayTrend,
     history: [...stock.history, newPoint],
   };
+}
+
+export function checkBankruptcy(price: number): boolean {
+  if (price >= BANKRUPTCY_THRESHOLD) return false;
+  const modifier = 1 + (BANKRUPTCY_THRESHOLD - price) / BANKRUPTCY_THRESHOLD;
+  return Math.random() < BANKRUPTCY_CHANCE * modifier;
+}
+
+const REPLACEMENT_NAME_PARTS: Record<string, { prefixes: string[]; suffixes: string[] }> = {
+  Tech: {
+    prefixes: ['Cyber', 'Quantum', 'Neural', 'Cloud', 'Data', 'Pixel', 'Logic', 'Binary', 'Nano', 'Sync'],
+    suffixes: ['Dynamics', 'Systems', 'Labs', 'Tech', 'Software', 'Networks', 'Digital', 'Solutions'],
+  },
+  Entertainment: {
+    prefixes: ['Star', 'Vivid', 'Epic', 'Prime', 'Nova', 'Blitz', 'Flash', 'Hype', 'Mega', 'Ultra'],
+    suffixes: ['Studios', 'Media', 'Entertainment', 'Pictures', 'Productions', 'Arts', 'Play', 'Show'],
+  },
+  Energy: {
+    prefixes: ['Solar', 'Wind', 'Petro', 'Volt', 'Power', 'Fusion', 'Hydro', 'Grid', 'Eco', 'Terra'],
+    suffixes: ['Energy', 'Power', 'Resources', 'Utilities', 'Electric', 'Dynamics', 'Systems', 'Fuels'],
+  },
+  Media: {
+    prefixes: ['Buzz', 'Signal', 'Wave', 'Pulse', 'Stream', 'Link', 'Cast', 'Vibe', 'Core', 'Flux'],
+    suffixes: ['Media', 'Digital', 'Networks', 'Broadcasting', 'Content', 'Studios', 'Wire', 'Press'],
+  },
+  Finance: {
+    prefixes: ['Capital', 'Crown', 'Summit', 'Apex', 'Vault', 'Prime', 'Atlas', 'Merit', 'Crest', 'Forge'],
+    suffixes: ['Holdings', 'Financial', 'Capital', 'Group', 'Partners', 'Trust', 'Ventures', 'Fund'],
+  },
+  Consumer: {
+    prefixes: ['Fresh', 'Swift', 'Snap', 'Quick', 'Dash', 'Bright', 'Peak', 'True', 'Bold', 'Pure'],
+    suffixes: ['Goods', 'Market', 'Direct', 'Express', 'Supply', 'Brands', 'Corp', 'Commerce'],
+  },
+};
+
+const usedReplacementNames = new Set<string>();
+
+export function generateReplacementStock(
+  sector: string,
+  day: number,
+  existingTickers: string[]
+): { definition: StockDefinition; state: StockState } {
+  const parts = REPLACEMENT_NAME_PARTS[sector] || REPLACEMENT_NAME_PARTS['Tech'];
+  let name = '';
+  let ticker = '';
+  let attempts = 0;
+
+  do {
+    const prefix = parts.prefixes[Math.floor(Math.random() * parts.prefixes.length)];
+    const suffix = parts.suffixes[Math.floor(Math.random() * parts.suffixes.length)];
+    name = `${prefix} ${suffix}`;
+    ticker = (prefix.slice(0, 2) + suffix.slice(0, 2)).toUpperCase();
+    attempts++;
+  } while (
+    (usedReplacementNames.has(name) || existingTickers.includes(ticker)) &&
+    attempts < 50
+  );
+
+  usedReplacementNames.add(name);
+
+  const basePrice = Math.round((Math.random() * 180 + 20) * 100) / 100;
+  const volatility = 0.3 + Math.random() * 0.5;
+
+  const definition: StockDefinition = {
+    ticker,
+    name,
+    sector,
+    basePrice,
+    volatility,
+  };
+
+  // 30% chance of negative starting trend
+  const forceNegative = Math.random() < 0.3;
+  const state = initStockState(definition, day);
+  if (forceNegative) {
+    state.dayTrend = -(0.02 + Math.random() * 0.04);
+  }
+
+  return { definition, state };
+}
+
+export function resetReplacementNames(): void {
+  usedReplacementNames.clear();
 }
