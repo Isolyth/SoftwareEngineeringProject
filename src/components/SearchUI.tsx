@@ -41,6 +41,29 @@ export default function SearchUI({ state, portfolioValue, todayPL, onBack, onBuy
                   <span className="search-ticker">{stock.ticker}</span>
                   <span className="search-name">{def.name}</span>
                   <span className="search-sector">{def.sector}</span>
+                  {(() => {
+                    const rels = state.relations.filter(
+                      (r) => r.from === stock.ticker || r.to === stock.ticker
+                    );
+                    if (rels.length === 0) return null;
+                    return (
+                      <div className="search-relations">
+                        {rels.map((rel, i) => {
+                          const otherTicker = rel.from === stock.ticker ? rel.to : rel.from;
+                          return (
+                            <span
+                              key={i}
+                              className={`relation-tag ${rel.type}`}
+                              title={rel.description}
+                            >
+                              {rel.type === 'competitor' ? '\u2694' : rel.type === 'supplier' ? '\u2B8C' : '\u2660'}{' '}
+                              {otherTicker}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
                 {stock.failed ? (
                   <span className="failed-label">FAILED</span>

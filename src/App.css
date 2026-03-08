@@ -81,6 +81,18 @@
   letter-spacing: 2px;
 }
 
+.stock-list-group {
+  margin-bottom: 4px;
+}
+
+.stock-list-sector {
+  padding: 4px 12px 2px;
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
 .stock-btn {
   display: flex;
   align-items: center;
@@ -106,6 +118,16 @@
   border-left-color: #ffd740;
   color: #fff;
 }
+
+.stock-btn-rel {
+  font-size: 10px;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.stock-btn-rel.competitor { color: #ff8a65; }
+.stock-btn-rel.supplier { color: #4fc3f7; }
+.stock-btn-rel.partner { color: #81c784; }
 
 .stock-btn-ticker {
   font-weight: bold;
@@ -990,4 +1012,38 @@
 @keyframes alertPulse {
   0% { transform: scale(1.02); }
   100% { transform: scale(1); }
+}
+
+/* ===== COMPANY RELATIONS ===== */
+.search-relations {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.relation-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  cursor: default;
+}
+
+.relation-tag.competitor {
+  color: #ff8a65;
+  background: rgba(255, 138, 101, 0.12);
+  border: 1px solid rgba(255, 138, 101, 0.25);
+}
+
+.relation-tag.supplier {
+  color: #4fc3f7;
+  background: rgba(79, 195, 247, 0.12);
+  border: 1px solid rgba(79, 195, 247, 0.25);
+}
+
+.relation-tag.partner {
+  color: #81c784;
+  background: rgba(129, 199, 132, 0.12);
+  border: 1px solid rgba(129, 199, 132, 0.25);
 }

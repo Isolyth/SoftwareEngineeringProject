@@ -130,9 +130,9 @@ const REPLACEMENT_NAME_PARTS: Record<string, { prefixes: string[]; suffixes: str
     prefixes: ['Cyber', 'Quantum', 'Neural', 'Cloud', 'Data', 'Pixel', 'Logic', 'Binary', 'Nano', 'Sync'],
     suffixes: ['Dynamics', 'Systems', 'Labs', 'Tech', 'Software', 'Networks', 'Digital', 'Solutions'],
   },
-  Entertainment: {
-    prefixes: ['Star', 'Vivid', 'Epic', 'Prime', 'Nova', 'Blitz', 'Flash', 'Hype', 'Mega', 'Ultra'],
-    suffixes: ['Studios', 'Media', 'Entertainment', 'Pictures', 'Productions', 'Arts', 'Play', 'Show'],
+  Consumer: {
+    prefixes: ['Fresh', 'Swift', 'Snap', 'Quick', 'Dash', 'Bright', 'Peak', 'True', 'Bold', 'Pure'],
+    suffixes: ['Goods', 'Market', 'Direct', 'Express', 'Supply', 'Brands', 'Corp', 'Commerce'],
   },
   Energy: {
     prefixes: ['Solar', 'Wind', 'Petro', 'Volt', 'Power', 'Fusion', 'Hydro', 'Grid', 'Eco', 'Terra'],

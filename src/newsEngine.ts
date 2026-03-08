@@ -1,4 +1,5 @@
-import type { StockState, StockDefinition, LiveNewsEvent, NewsEventType } from './types';
+import type { StockState, StockDefinition, LiveNewsEvent, NewsEventType, StockRelation } from './types';
+import { computeRelationEffects } from './relationEngine';
 
 export const MAX_LIVE_NEWS = 8;
 
@@ -42,7 +43,8 @@ const NEWS_TEMPLATES: Record<NewsEventType, NewsTemplate[]> = {
 export function generateNewsEvent(
   stocks: StockState[],
   defs: StockDefinition[],
-  newsId: number
+  newsId: number,
+  relations: StockRelation[]
 ): { event: LiveNewsEvent; trendShifts: Map<string, number> } | null {
   const activeStocks = stocks.filter((s) => !s.failed);
   if (activeStocks.length === 0) return null;
@@ -88,6 +90,13 @@ export function generateNewsEvent(
     }
   } else {
     trendShifts.set(targetStock.ticker, template.trendShift);
+
+    // Relation propagation — only for ticker-targeted news
+    const relEffects = computeRelationEffects(targetStock.ticker, relations);
+    for (const effect of relEffects) {
+      const existing = trendShifts.get(effect.ticker) || 0;
+      trendShifts.set(effect.ticker, existing + template.trendShift * effect.trendShiftMultiplier);
+    }
   }
 
   return { event, trendShifts };
@@ -96,7 +105,8 @@ export function generateNewsEvent(
 export function computeNewsInfluence(
   ticker: string,
   sector: string,
-  activeEffects: LiveNewsEvent[]
+  activeEffects: LiveNewsEvent[],
+  relations: StockRelation[]
 ): { newsImpact: number; newsVolatility: number } {
   let newsImpact = 0;
   let newsVolatility = 1;
@@ -108,6 +118,29 @@ export function computeNewsInfluence(
     } else if (effect.targetSector === sector) {
       newsImpact += effect.impact * 0.5;
       newsVolatility *= (effect.volatility - 1) * 0.4 + 1;
+    } else if (effect.targetTicker) {
+      // Check if the targeted ticker is related to this ticker
+      const rel = relations.find(
+        (r) =>
+          (r.from === effect.targetTicker && r.to === ticker) ||
+          (r.to === effect.targetTicker && r.from === ticker)
+      );
+      if (rel) {
+        // Per-tick stochastic check — creates "only sometimes" feel
+        const probs: Record<string, number> = { competitor: 0.5, supplier: 0.6, partner: 0.45 };
+        if (Math.random() < (probs[rel.type] ?? 0)) {
+          const ranges: Record<string, [number, number]> = {
+            competitor: [0.20, 0.35],
+            supplier: [0.25, 0.40],
+            partner: [0.15, 0.30],
+          };
+          const [min, max] = ranges[rel.type];
+          const fraction = min + Math.random() * (max - min);
+          const factor = rel.type === 'competitor' ? -fraction : fraction;
+          newsImpact += effect.impact * factor;
+          newsVolatility *= 1 + (effect.volatility - 1) * 0.25;
+        }
+      }
     }
   }
 

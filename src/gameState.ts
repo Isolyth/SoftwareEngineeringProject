@@ -18,6 +18,11 @@ import {
   decrementEffects,
   MAX_LIVE_NEWS,
 } from './newsEngine';
+import {
+  generateInitialRelations,
+  generateRelationsForReplacement,
+  removeRelationsForTicker,
+} from './relationEngine';
 
 const STARTING_CASH = 10000;
 const GOAL = 20000;
@@ -44,6 +49,7 @@ export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
     const defs = [...STOCKS];
     const stocks = initStocks(defs);
+    const relations = generateInitialRelations(defs);
     return {
       day: 1,
       maxDays: MAX_DAYS,
@@ -61,6 +67,7 @@ export function useGameState() {
       liveNews: [],
       activeEffects: [],
       bankruptcyAlert: null,
+      relations,
     };
   });
 
@@ -84,10 +91,14 @@ export function useGameState() {
     setState((prev) => {
       const newStocks: StockState[] = [];
       const newDefs = [...prev.stockDefinitions];
+      let relations = prev.relations;
 
       for (let i = 0; i < prev.stocks.length; i++) {
         const s = prev.stocks[i];
         if (s.failed) {
+          // Remove old relations
+          relations = removeRelationsForTicker(relations, s.ticker);
+
           const existingTickers = prev.stocks.map((st) => st.ticker);
           const { definition, state: newState } = generateReplacementStock(
             newDefs[i].sector,
@@ -96,6 +107,16 @@ export function useGameState() {
           );
           newDefs[i] = definition;
           newStocks.push(newState);
+
+          // Generate new relations for replacement
+          const newRels = generateRelationsForReplacement(
+            definition.ticker,
+            definition.sector,
+            definition.name,
+            newDefs,
+            relations
+          );
+          relations = [...relations, ...newRels];
         } else {
           newStocks.push(s);
         }
@@ -105,6 +126,7 @@ export function useGameState() {
         ...prev,
         stocks: newStocks,
         stockDefinitions: newDefs,
+        relations,
         bankruptcyAlert: null,
       };
     });
@@ -126,7 +148,8 @@ export function useGameState() {
         const result = generateNewsEvent(
           prev.stocks,
           prev.stockDefinitions,
-          newsIdCounterRef.current
+          newsIdCounterRef.current,
+          prev.relations
         );
         if (result) {
           newsIdCounterRef.current++;
@@ -154,7 +177,8 @@ export function useGameState() {
           const { newsImpact, newsVolatility } = computeNewsInfluence(
             s.ticker,
             def.sector,
-            newActiveEffects
+            newActiveEffects,
+            prev.relations
           );
           const trendShift = trendShiftsRef.current.get(s.ticker) || 0;
           trendShiftsRef.current.delete(s.ticker);
@@ -337,11 +361,14 @@ export function useGameState() {
       // Replace any failed stocks before new day
       let defs = [...prev.stockDefinitions];
       let currentStocks = prev.stocks;
+      let relations = prev.relations;
       const hasFailedStocks = currentStocks.some((s) => s.failed);
       if (hasFailedStocks) {
         const replaced: StockState[] = [];
         for (let i = 0; i < currentStocks.length; i++) {
           if (currentStocks[i].failed) {
+            relations = removeRelationsForTicker(relations, currentStocks[i].ticker);
+
             const existingTickers = currentStocks.map((st) => st.ticker);
             const { definition, state: newState } = generateReplacementStock(
               defs[i].sector,
@@ -350,6 +377,15 @@ export function useGameState() {
             );
             defs[i] = definition;
             replaced.push(newState);
+
+            const newRels = generateRelationsForReplacement(
+              definition.ticker,
+              definition.sector,
+              definition.name,
+              defs,
+              relations
+            );
+            relations = [...relations, ...newRels];
           } else {
             replaced.push(currentStocks[i]);
           }
@@ -386,6 +422,7 @@ export function useGameState() {
         liveNews: [],
         activeEffects: [],
         bankruptcyAlert: null,
+        relations,
       };
     });
   }, []);
@@ -404,6 +441,7 @@ export function useGameState() {
 
     const defs = [...STOCKS];
     const stocks = initStocks(defs, 1);
+    const relations = generateInitialRelations(defs);
     setState({
       day: 1,
       maxDays: MAX_DAYS,
@@ -421,6 +459,7 @@ export function useGameState() {
       liveNews: [],
       activeEffects: [],
       bankruptcyAlert: null,
+      relations,
     });
   }, []);
 

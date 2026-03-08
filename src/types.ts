@@ -46,6 +46,15 @@ export interface LiveNewsEvent {
   targetTicker?: string;
 }
 
+export type RelationType = 'competitor' | 'supplier' | 'partner';
+
+export interface StockRelation {
+  from: string;        // ticker
+  to: string;          // ticker
+  type: RelationType;
+  description: string; // e.g. "Appull Inc. competes directly with MaxPod Corp."
+}
+
 export interface GameState {
   day: number;
   maxDays: number;
@@ -63,4 +72,5 @@ export interface GameState {
   liveNews: LiveNewsEvent[];
   activeEffects: LiveNewsEvent[];
   bankruptcyAlert: string | null;
+  relations: StockRelation[];
 }

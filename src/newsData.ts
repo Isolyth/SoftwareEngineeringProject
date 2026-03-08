@@ -45,9 +45,9 @@ const ALL_NEWS: NewsArticle[][] = [
       tags: ['GRNE', 'PPOL'],
     },
     {
-      headline: 'MAXPOD RECALLS HEADPHONES',
-      blurb: 'MaxPod Corp issued a voluntary recall of 2 million wireless headphones after reports of overheating batteries. The company\'s stock may face short-term pressure.',
-      tags: ['MXPD'],
+      headline: 'STREAMVIBE FACES DATA BREACH',
+      blurb: 'StreamVibe Corp disclosed a data breach affecting 3 million user accounts. The company is offering free credit monitoring and expects increased security costs.',
+      tags: ['STRM'],
     },
     {
       headline: 'TRUSTSI LAUNCHES CRYPTO TRADING',
@@ -70,7 +70,7 @@ const ALL_NEWS: NewsArticle[][] = [
     {
       headline: 'TECH SECTOR ROTATION UNDERWAY',
       blurb: 'Institutional investors appear to be rotating out of high-growth tech names and into value stocks, according to market analysts tracking fund flows.',
-      tags: ['APLL', 'NETZ', 'MXPD'],
+      tags: ['APLL', 'NETZ', 'STRM'],
     },
   ],
   // Day 5 news
@@ -94,9 +94,9 @@ const ALL_NEWS: NewsArticle[][] = [
   // Day 6 news
   [
     {
-      headline: 'APPULL AND MAXPOD MERGER RUMORS',
-      blurb: 'Unconfirmed reports suggest Appull Inc. and MaxPod Corp. have entered preliminary merger discussions. A combined entity would dominate the consumer electronics market.',
-      tags: ['APLL', 'MXPD'],
+      headline: 'APPULL AND SWIFTDASH PARTNERSHIP DEAL',
+      blurb: 'Appull Inc. and SwiftDash Delivery announced a logistics partnership, integrating same-day delivery for Appull products nationwide.',
+      tags: ['APLL', 'SWFT'],
     },
     {
       headline: 'NETZONE USER BASE HITS 1 BILLION',

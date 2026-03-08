@@ -51,9 +51,11 @@ export default function DayUI({
       <div className="day-content">
         <StockList
           stocks={state.stocks}
+          stockDefinitions={state.stockDefinitions}
           selectedTicker={state.selectedTicker}
           onSelect={onSelectStock}
           holdings={state.holdings}
+          relations={state.relations}
         />
 
         <div className="center-panel">
