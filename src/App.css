@@ -502,7 +502,7 @@
 
 /* ===== NIGHT UI ===== */
 .night-ui {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -600,6 +600,15 @@
   gap: 20px;
 }
 
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .sidebar-section h3 {
   font-size: 12px;
   color: #666;
@@ -627,7 +636,7 @@
 }
 
 .sleep-btn {
-  margin-top: auto;
+  flex-shrink: 0;
   padding: 14px;
   background: #fff;
   border: 2px solid #000;

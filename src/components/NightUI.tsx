@@ -34,18 +34,20 @@ export default function NightUI({ state, portfolioValue, onSleep }: Props) {
         </div>
 
         <div className="night-sidebar">
-          <div className="sidebar-section">
-            <h3>TODAY'S NEWS</h3>
-            {state.news.map((article, i) => (
-              <div key={i} className="sidebar-item">
-                {article.headline.substring(0, 30)}...
-              </div>
-            ))}
-          </div>
-          <div className="sidebar-section">
-            <h3>PORTFOLIO</h3>
-            <div className="sidebar-value">${portfolioValue.toFixed(2)}</div>
-            <div className="sidebar-goal">Goal: ${state.goal.toLocaleString()}</div>
+          <div className="sidebar-scroll">
+            <div className="sidebar-section">
+              <h3>TODAY'S NEWS</h3>
+              {state.news.map((article, i) => (
+                <div key={i} className="sidebar-item">
+                  {article.headline.substring(0, 30)}...
+                </div>
+              ))}
+            </div>
+            <div className="sidebar-section">
+              <h3>PORTFOLIO</h3>
+              <div className="sidebar-value">${portfolioValue.toFixed(2)}</div>
+              <div className="sidebar-goal">Goal: ${state.goal.toLocaleString()}</div>
+            </div>
           </div>
           <button className="sleep-btn" onClick={onSleep}>
             GO TO SLEEP
